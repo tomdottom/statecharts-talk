@@ -1,0 +1,5 @@
+---
+# image which will be run as a docker container
+image: alpine:latest
+# number of container replicas to run
+replicas: 1

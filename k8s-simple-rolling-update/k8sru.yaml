@@ -1,0 +1,52 @@
+statechart:
+  name: Elevator
+  description: K8s Simple Rolling Update
+  root state:
+    name: k8sru
+    initial: ready
+    states:
+
+      - name: ready
+        transitions:
+          - event: new_config
+            target: initializing
+            action: set_next(locals(), event)
+
+      - name: initializing
+        transitions:
+          - target: error
+            guard: |
+              next is None and current is None
+          - target: rollout
+            guard: |
+              next is not None and current is None
+          - target: rollout
+            guard: |
+              next is None and current is not None
+          - target: rollout
+            guard: |
+              next is not None and current is not None
+
+      - name: error
+        on entry: |
+          print("error")
+          print(locals())
+        type: final
+
+      - name: rollout
+        on entry: |
+          rollout_finished = False
+        transitions:
+          - guard: not rollout_finished
+            action: rollout(locals())
+          - guard: rollout_finished
+            target: rename
+            action: rename(locals(), event)
+          - event: abort
+            target: rename
+
+      - name: rename
+        transitions:
+          - target: ready
+
+      - name: abort
