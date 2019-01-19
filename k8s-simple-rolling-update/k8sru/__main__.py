@@ -73,11 +73,13 @@ def new_config(filepath):
         Event("new_config", config=config)
     )
 
-
+config_path = "./config.yaml"
 observer = watch.filepath(
-    filepath="./config.yaml",
+    filepath=config_path,
     callback=new_config,
 )
+
+new_config(config_path)
 
 try:
     while True:
