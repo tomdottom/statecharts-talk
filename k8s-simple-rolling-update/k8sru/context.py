@@ -2,7 +2,7 @@ import logging
 
 logger = logging.getLogger("k8sru.context")
 
-from actions import (
+from k8sru.actions import (
     rename,
     rollout,
     set_next,

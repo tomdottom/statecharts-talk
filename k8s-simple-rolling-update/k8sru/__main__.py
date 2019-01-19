@@ -1,5 +1,6 @@
 import time
 import logging
+import os
 from pprint import pprint
 
 logging.basicConfig()
@@ -12,9 +13,11 @@ from sismic.clock import SimulatedClock as Clock
 from sismic.helpers import run_in_background
 import yaml
 
-import context
-import utils
-import watch
+from k8sru import (
+    context,
+    utils,
+    watch,
+)
 
 
 # Create the interpreter clock
@@ -22,7 +25,15 @@ clock = Clock()
 clock.start()
 
 # Load statechart from yaml file
-k8sru = import_from_yaml(filepath='k8sru.yaml')
+sc_config_path = "./k8sru.yaml"
+if not os.path.isabs(sc_config_path):
+    sc_config_path = os.path.realpath(
+        os.path.join(
+            os.path.dirname(__file__),
+            sc_config_path,
+        )
+    )
+k8sru = import_from_yaml(filepath=sc_config_path)
 
 # Create an interpreter for this statechart
 interpreter = Interpreter(

@@ -15,8 +15,13 @@
 
 *Terminal 2*
 
-    python main.py
+    python -m k8sru
 
 *Editor*
 
-Update and save config.yaml
+    Update and save config.yaml
+
+What you will see:
+- Upon saving config.yaml a new_config event will be sent to the k8sru interpreter.
+- The interpreter will proceed through the states/steps to ensure the running containers match the config.
+- The watch on the docker container list will show the new containers starting/stopping.

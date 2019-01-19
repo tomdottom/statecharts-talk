@@ -2,7 +2,7 @@ import logging
 
 logger = logging.getLogger("k8sru.actions")
 
-from utils import (
+from k8sru.utils import (
     get_containers,
     get_labels_dict,
     get_labels,
