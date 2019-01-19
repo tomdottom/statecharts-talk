@@ -7,7 +7,7 @@ name = "pypi"
 sismic = "*"
 docker = "*"
 watchdog = "*"
-pyyaml = "*"
+pyyaml = ">=4.2b1"
 
 [dev-packages]
 ipython = "*"
@@ -15,3 +15,6 @@ pudb = "*"
 
 [requires]
 python_version = "3.7"
+
+[pipenv]
+allow_prereleases = true
