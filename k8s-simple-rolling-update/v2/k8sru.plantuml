@@ -1,0 +1,26 @@
+@startuml
+title Elevator
+state "k8sru" as k8sru {
+  [*] --> ready
+  state "abort" as abort {
+  }
+  state "rename" as rename {
+    rename --> ready
+  }
+  state "rollout" as rollout {
+    rollout : **entry** / rollout_finished = False
+    rollout : [not rollout_finished] / rollout(locals())
+    rollout --> rename : [rollout_finished] / rename(locals(), event)
+    rollout --> rename : abort
+  }
+  initializing --> [*] : [next is None and current is None]
+  state "initializing" as initializing {
+    initializing --> rollout : [next is not None and current is None]
+    initializing --> rollout : [next is None and current is not None]
+    initializing --> rollout : [next is not None and current is not None]
+  }
+  state "ready" as ready {
+    ready --> initializing : new_config / set_next(locals(), event)
+  }
+}
+@enduml

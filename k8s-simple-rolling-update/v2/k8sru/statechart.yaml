@@ -1,0 +1,66 @@
+statechart:
+  name: K8SRU
+  description: K8s Simple Rolling Update
+  root state:
+    name: k8sru
+    initial: initializing
+    states:
+
+      - name: initializing
+        on entry: load_config(locals())
+        transitions:
+          - target: ready
+
+      - name: ready
+        parallel states:
+
+          - name: config
+            initial: config updating
+            states:
+
+              - name: config updating
+                transitions:
+                  - event: in sync
+                    target: config rename
+                    action: rename(locals(), event)
+                  - event: abort
+                    target: config revert
+                    action: revert(locals(), event)
+
+              - name: config rename
+                transitions:
+                  - target: config waiting
+
+              - name: config waiting
+                transitions:
+                  - event: new config
+                    target: config updating
+                    action: set_next(locals(), event)
+
+              - name: config revert
+                transitions:
+                  - target: config updating
+
+          - name: control
+            initial: control waiting
+            states:
+
+              - name: control waiting
+                transitions:
+                  - guard: after(2)
+                    target: control checking
+
+              - name: control checking
+                transitions:
+                  - guard: not synced(locals())
+                    target: control updating
+                    action: rollout(locals())
+                  - guard: synced(locals())
+                    action: send("in sync")
+                    target: control waiting
+
+              - name: control updating
+                transitions:
+                  - guard: after(1)
+                    target: control checking
+
