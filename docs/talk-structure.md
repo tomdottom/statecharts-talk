@@ -27,6 +27,7 @@
 - Automat
 -- The Twisted Project and how it uses Automat
 - Limits of FSM usefulness
+-- State complexity explosion
 
 ## 3. StateCharts & Hierarchical State Machines (HSM)
 
