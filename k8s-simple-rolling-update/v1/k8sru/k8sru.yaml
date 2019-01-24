@@ -1,5 +1,5 @@
 statechart:
-  name: Elevator
+  name: K8sru
   description: K8s Simple Rolling Update
   root state:
     name: k8sru

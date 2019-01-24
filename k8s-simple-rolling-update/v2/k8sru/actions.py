@@ -16,19 +16,22 @@ import docker
 
 
 def synced(context):
-    client = docker.from_env()
+    try:
+        client = docker.from_env()
 
-    # Get no. of 'current' containers
-    current_config = context["releases"][context["current"]]
-    current_containers_labels = get_labels(current_config)
-    current_containers = get_containers(client, current_containers_labels)
+        # Get no. of 'current' containers
+        current_config = context["releases"][context["current"]]
+        current_containers_labels = get_labels(current_config)
+        current_containers = get_containers(client, current_containers_labels)
 
-    # Get no. of 'current' containers
-    other_containers = get_containers(client, ["k8sru=True"])
-    for container in current_containers:
-        other_containers.remove(container)
+        # Get no. of 'current' containers
+        other_containers = get_containers(client, ["k8sru=True"])
+        for container in current_containers:
+            other_containers.remove(container)
 
-    return len(other_containers) == 0 and len(current_containers) == current_config["replicas"]
+        return len(other_containers) == 0 and len(current_containers) == current_config["replicas"]
+    except Exception:
+        return False
 
 
 
@@ -49,48 +52,52 @@ def revert(context, event):
 
 
 def rollout(context):
-    logger.debug("Started Rollout")
-    client = docker.from_env()
+    try:
+        logger.debug("Started Rollout")
+        client = docker.from_env()
 
-    # Get no. of 'current' containers
-    current_config = context["releases"][context["current"]]
-    current_containers_labels = get_labels(current_config)
-    current_containers = get_containers(client, current_containers_labels)
-    current_containers_count = len(current_containers)
-    logger.debug(f"current_containers #: {current_containers_count}")
+        # Get no. of 'current' containers
+        current_config = context["releases"][context["current"]]
+        current_containers_labels = get_labels(current_config)
+        current_containers = get_containers(client, current_containers_labels)
+        current_containers_count = len(current_containers)
+        logger.debug(f"current_containers #: {current_containers_count}")
 
-    # Add a new one if needed
-    if current_containers_count < current_config["replicas"]:
-        start_new_container(client, current_config)
-    # Remove one if needed
-    elif current_containers_count > current_config["replicas"]:
-        container = current_containers.pop()
-        container.remove(force=True)
+        # Add a new one if needed
+        if current_containers_count < current_config["replicas"]:
+            start_new_container(client, current_config)
+        # Remove one if needed
+        elif current_containers_count > current_config["replicas"]:
+            container = current_containers.pop()
+            container.remove(force=True)
 
-    # Refresh list
-    current_containers = get_containers(client, current_containers_labels)
+        # Refresh list
+        current_containers = get_containers(client, current_containers_labels)
 
-    # Get no. of 'other' containers
-    other_containers = get_containers(client, ["k8sru=True"])
-    for container in current_containers:
-        other_containers.remove(container)
-    logger.debug(f"other_containers #: {len(other_containers)}")
+        # Get no. of 'other' containers
+        other_containers = get_containers(client, ["k8sru=True"])
+        for container in current_containers:
+            other_containers.remove(container)
+        logger.debug(f"other_containers #: {len(other_containers)}")
 
 
-    # Remove one if any available
-    if len(other_containers) > 0:
-        other_containers[0].remove(force=True)
+        # Remove one if any available
+        if len(other_containers) > 0:
+            other_containers[0].remove(force=True)
 
-    # Refresh list
-    other_containers = get_containers(client, ["k8sru=True"])
-    for container in current_containers:
-        other_containers.remove(container)
+        # Refresh list
+        other_containers = get_containers(client, ["k8sru=True"])
+        for container in current_containers:
+            other_containers.remove(container)
 
-    logger.debug(f"current_containers #: {current_containers_count}")
-    logger.debug(f"other_containers #: {len(other_containers)}")
-    if (len(other_containers) == 0
-           and len(current_containers) == current_config["replicas"]):
-        context["rollout_finished"] = True
+        logger.debug(f"current_containers #: {current_containers_count}")
+        logger.debug(f"other_containers #: {len(other_containers)}")
+        if (len(other_containers) == 0
+            and len(current_containers) == current_config["replicas"]):
+            context["rollout_finished"] = True
+    except Exception:
+        # yuk, but this is a PoC hack
+        pass
 
 
 def set_next(context, event):

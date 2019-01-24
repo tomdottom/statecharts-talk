@@ -12,7 +12,7 @@ if os.environ.get("DEBUG"):
 from sismic.io import import_from_yaml
 from sismic.interpreter import Interpreter, Event
 from sismic.clock import SimulatedClock as Clock
-from sismic.helpers import run_in_background
+from sismic.runner import AsyncRunner
 import yaml
 
 from k8sru import (
@@ -37,37 +37,38 @@ interpreter = Interpreter(
     clock=clock
 )
 
+class Runner(AsyncRunner):
 
-def _log_interpreter(step):
-    pprint("-----------------------------------")
-    events = [
-        s.event.name
-        for s in step
-        if s is not None and s.event is not None
-    ]
+    def after_execute(self, step):
+        pprint("-----------------------------------")
+        events = [
+            s.event.name
+            for s in step
+            if s is not None and s.event is not None
+        ]
 
-    print("Events:     ", end="")
-    pprint(events)
-    print("States:     ", end="")
-    pprint(interpreter.configuration[-2:])
-    # print(interpreter.context)
-    ctx = dict(
-        # Context variables
-        releases=interpreter.context["releases"],
-        current=interpreter.context["current"],
-        last=interpreter.context["last"],
-    )
-    print("Context:")
-    pprint(ctx, indent=12)
+        print("Events:     ", end="")
+        pprint(events)
+        print("States:     ", end="")
+        pprint(interpreter.configuration[-2:])
+        # print(interpreter.context)
+        ctx = dict(
+            # Context variables
+            releases=interpreter.context["releases"],
+            current=interpreter.context["current"],
+            last=interpreter.context["last"],
+        )
+        print("Context:")
+        pprint(ctx, indent=12)
 
 
 
 # Run the interpreter in its own thread
-interpreter_thread = run_in_background(
+interpreter_thread = Runner(
     interpreter,
-    delay=0.5,
-    callback=_log_interpreter,
+    interval=0.5,
 )
+interpreter_thread.start()
 
 
 def new_config(filepath):
@@ -102,6 +103,4 @@ try:
 except KeyboardInterrupt:
     interpreter_thread.stop()
     observer.stop()
-
-interpreter_thread.join()
-observer.join()
+    observer.join()
